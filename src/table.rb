@@ -77,6 +77,7 @@ class Table
   end
 
   # Imports data from an csv and creates a new table object. NOTE: This requires that the first row in the CSV be the column names
+  # TODO: The import code should be separated out here so that we can import data into existing tables.
   # @param name [string] :: The name of the table to be created
   # @param path [string] :: The path to the CSV file
   # @return [Table] :: The table object that was created from the CSV

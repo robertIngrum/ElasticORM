@@ -143,9 +143,9 @@ class Dataset
     table_data = table.columns.dup
 
     # Then we iterate over the columns and modify them in place, stripping away the column object and leaving the data
-    table_data.each do |column_name, column|
-      table_data[column_prefix << column_name] = column[0..column.length - 1]
-    end
+    table_data = table_data.map do |column_name, column|
+      ["#{column_prefix}#{column_name}",  column[0..column.length - 1]]
+    end.to_h
 
     # TODO: The filter and group loops are almost identical, combine them
     # Iterate through each filter to see if it applies to the current table.
@@ -185,18 +185,18 @@ class Dataset
         # Next, recursively build out the new table and save the table data to the target table data.
         # Also clear out the table data since it needs to be rebuilt
         joined_table_data = convert_table_to_table_data(join_data[:table], prepend_table_name)
-        target_table_data = table_data
-        table_data = []
+        target_table_data = table_data.dup
+        table_data = {}
 
 
         # Since we currently only support inner joins, we need to find the intersection of the joined column and the target column
         joined_column_prefix = build_column_prefix(join_data[:table].name, prepend_table_name)
-        joined_column = joined_table_data[joined_column_prefix << join_data[:column_name]]
-        target_column = table_data[column_prefix << join_data[:target_column]]
+        joined_column = joined_table_data["#{joined_column_prefix}#{join_data[:column_name]}"]
+        target_column = target_table_data["#{column_prefix}#{join_data[:target_column_name]}"]
 
         # Convert the two columns to arrays of hashes that contain both the index and value. Then sort the two columns
         # by value.  Note, the order doesn't actually matter, so long as they are both sorted the same way
-        joined_column, target_column = [joined_column, target_column].map do |column|
+        joined_column, target_column = [joined_column, target_column].map! do |column|
           column.each_with_index.map { |value, i| {index: i, value: value} }.sort { |a, b| a[:value] <=> b[:value] }
         end
 
@@ -207,11 +207,11 @@ class Dataset
         target_column.each_with_index do |target_row, target_position|
           joined_column.each_with_index do |joined_row, joined_position|
             # If the values of the row are the same, we have a valid join and store the pairings.
-            if target_row == joined_row
+            if target_row[:value] == joined_row[:value]
               groupings << {target: target_position, joined: joined_position}
 
             # If the value of the first row is less than the value of the second row, break out of the joined loop because it's value will never decrease
-            elsif target_row < joined_row
+            elsif target_row[:value] < joined_row[:value]
               break
             end
           end
@@ -221,7 +221,9 @@ class Dataset
         # Iterate through each column in the target column and apply the groupings
         target_table_data.each do |column_name, column|
           # For each record in the groupings, grab the index from the column and save it to the table data under the column name
-          table_data[column_name] = groupings.map { |grouping| column[grouping[:target]]}
+          table_data[column_name] = groupings.map {
+              |grouping| column[grouping[:target].to_i].to_s
+          }
         end
 
         # Iterate through each column in the joined column and apply the groupings
@@ -251,9 +253,12 @@ class Dataset
 
     end
 
-    # Iterate through every column and remove the dropped indexes.  TODO: See if this can be done without nested loops
+    # Sort the dropped indexes first, it's important we delete last to first
+    dropped_indexes.sort!
+
+    # Iterate through every column and remove the dropped indexes from largest to smallest.  TODO: See if this can be done without nested loops
     table_data.each do |_, column|
-      dropped_indexes.each do |index|
+      dropped_indexes.reverse_each do |index|
         column.delete_at(index)
       end
     end
@@ -280,12 +285,12 @@ class Dataset
 
     end
 
-    # Iterate through every column and perform the groupings.  TODO: See if this can be done without nested loops
-    table_data.map! do |_, column|
+    # Iterate through every column and perform the groupings.  Then return the result.  TODO: See if this can be done without nested loops
+    table_data = table_data.map do |column_name, column|
 
       # If the column is the one we're grouping, just take the keys from our index groupings and replace it with those.
       if column == grouped_column
-        index_groupings.keys
+        [column_name, index_groupings.keys]
 
       # Otherwise, use the aggregator to combine the values into one
       else
@@ -310,15 +315,15 @@ class Dataset
           aggregated_column << current_value
         end
 
-        # Return the aggregated column to the map function
-        aggregated_column
+        # Return the column name and aggregated column to the map function
+        [column_name, aggregated_column]
       end
 
-    end
+    end.to_h
   end
 
   def build_column_prefix(table_name, prepend_table_name)
     # If prepend table name is true, we need to add 'table_name__' before every column, else leave it blank
-    prepend_table_name ? table_name << '__' : ''
+    prepend_table_name ? "#{table_name}__" : ''
   end
 end
