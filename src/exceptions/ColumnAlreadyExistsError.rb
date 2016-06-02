@@ -3,10 +3,10 @@ class ColumnAlreadyExistsError < StandardError
 
   attr_reader :column_name
 
-  # Creates a new ColumnAlreadyExists error
+  # Creates a new ColumnAlreadyExistsError
   # @param column_name [string] :: Represents the name of the column that was created.
   # @param note [string] :: Defaults to nil, this optional parameter can be used to pass additional notes about the error.
-  # @return [ColumnAlreadyExists] :: Returns an instance of the ColumnAlreadyExists error
+  # @return [ColumnAlreadyExistsError] :: Returns an instance of the ColumnAlreadyExistsError
   def initialize(column_name, note=nil)
     # Save the column name to the exception for debugging purposes
     @column_name = column_name

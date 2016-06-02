@@ -3,10 +3,10 @@ class InvalidDataSetError < StandardError
 
   attr_reader :reason
 
-  # Creates a new ColumnAlreadyExists error
+  # Creates a new InvalidDataSetError
   # @param reason [string] :: Represents the reason the dataset was rejected.
   # @param note [string] :: Defaults to nil, this optional parameter can be used to pass additional notes about the error.
-  # @return [ColumnAlreadyExists] :: Returns an instance of the ColumnAlreadyExists error
+  # @return [InvalidDataSetError] :: Returns an instance of the InvalidDataSetError error
   def initialize(reason, note=nil)
 
     @reason = reason
