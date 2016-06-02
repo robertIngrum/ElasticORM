@@ -48,7 +48,7 @@ class Column
 
   # This just adds the new data to the end of our storage array
   # @param new_data [array] :: The new data being added to @storage
-  def push(new_data)
-    @storage.push(new_data)
+  def push(*new_data)
+    @storage.push(*new_data)
   end
 end
