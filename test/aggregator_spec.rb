@@ -13,10 +13,10 @@ class AggregatorSpec < Test::Unit::TestCase
 
   def test_aggregator_with_average
     current_average = 9
-    count = 10
     new_val = 20
+    count = 10
     expected_val = 10
-    result = Aggregator.aggregate(:average, current_average, count, new_val)
+    result = Aggregator.aggregate(:average, current_average, new_val, count)
 
     assert_equal(result, expected_val, 'The aggregator did not perform average properly.')
   end

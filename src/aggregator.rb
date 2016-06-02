@@ -2,7 +2,7 @@
 class Aggregator
   METHODS = {
       sum: Proc.new { |current_val, new_val| current_val + new_val },
-      average: Proc.new { |current_average, count, new_val| ((current_average * count) + new_val) / (count + 1) },
+      average: Proc.new { |current_val, new_val, count| ((current_val * count) + new_val) / (count + 1) },
       min: Proc.new { |current_val, new_val| [current_val, new_val].min },
       max: Proc.new { |current_val, new_val| [current_val, new_val].max }
   }
@@ -12,6 +12,13 @@ class Aggregator
   # @param *arguments [?] :: The parameters to the aggregation method that was chosen.
   # @return [?] :: The result of the aggregation method
   def self.aggregate(method, *arguments)
+
+    # Make sure that the aggregation method actually exists.
+    unless METHODS.include?(method)
+      require './src/exceptions/AggregatorError'
+      raise AggregatorError('The method passed in does not match any aggregation functions.')
+    end
+
     # Get the number of arguments needed from the chosen aggregation method
     method_arguments = METHODS[method].arity
 

@@ -4,6 +4,7 @@ require 'csv'
 # This class represents a data structure similar to a table, where data is stored in rows and grouped by columns
 class Table
 
+  attr_reader :name
   attr_reader :count
   attr_reader :columns
 
