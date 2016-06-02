@@ -1,2 +1,6 @@
+# Ignore IntelliJ specific files
 .idea
 **/*.iml
+
+# Ingnore Bundler generated lock file
+*.lock
